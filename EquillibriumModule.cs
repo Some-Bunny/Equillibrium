@@ -119,13 +119,13 @@ namespace Equillibrium
             List<string> IDs = new List<string>();
             List<PickupObject> items = new List<PickupObject>();
             items.AddRange(Gungeon.Game.Items.Entries.ToList());
-            for (int i = 0; i < items.Count; i++)
+            for (int i = items.Count - 1; i >= 0; i--)
             {
                 if (items[i].quality == PickupObject.ItemQuality.EXCLUDED)
                 { items.Remove(items[i]); }
-                if (items[i].quality == PickupObject.ItemQuality.SPECIAL)
+                else if (items[i].quality == PickupObject.ItemQuality.SPECIAL)
                 { items.Remove(items[i]); }
-                if (items[i].quality == PickupObject.ItemQuality.COMMON)
+                else if (items[i].quality == PickupObject.ItemQuality.COMMON)
                 { items.Remove(items[i]); }
             }
             foreach (string o in Gungeon.Game.Items.AllIDs)
