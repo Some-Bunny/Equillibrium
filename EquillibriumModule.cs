@@ -19,7 +19,7 @@ namespace Equillibrium
     {
         public const string GUID = "somebunny.etg.equillibrium";
         public const string NAME = "Equillibrium";
-        public const string VERSION = "1.0.0";
+        public const string VERSION = "1.0.2";
         public const string TEXT_COLOR = "#ffa024";
 
        
@@ -136,11 +136,25 @@ namespace Equillibrium
             foreach (string ID in IDs)
             {
                 List<int> itemIDs = new List<int>();
+
                 foreach (string o in Gungeon.Game.Items.AllIDs)
                 {
                     if (o.Contains(ID))
                     {
-                        itemIDs.Add(Gungeon.Game.Items.Get(o).PickupObjectId);
+                        var p = Gungeon.Game.Items.Get(o);
+                        if (p.quality == PickupObject.ItemQuality.EXCLUDED)
+                        {
+                            continue;
+                        }
+                        if (p.quality == PickupObject.ItemQuality.SPECIAL)
+                        {
+                            continue;
+                        }
+                        if (p.quality == PickupObject.ItemQuality.COMMON)
+                        {
+                            continue;
+                        }
+                        itemIDs.Add(p.PickupObjectId);
                     }
                 }
                 moddedItemTrackers.Add(new ModdedItemTracker()
@@ -150,70 +164,29 @@ namespace Equillibrium
                     PickupCount = 1
                 });
             }
-            foreach (string ID in IDs)
-            {
-                ProcessnewItemDatabaseOfID(ID, items, ID == "gungeon" ? VanillaMultiplier() : 1);
-            }
             allitems = items;
             allIDs = IDs;
+            foreach (var ID in moddedItemTrackers)
+            {
+                ProcessnewItemDatabaseOfID(ID, ID.ID == "gungeon" ? VanillaMultiplier() : 1);
+            }
             Log($"{NAME} v{VERSION} started successfully.", TEXT_COLOR);
             yield break;
         }
 
-        public static void ProcessnewItemDatabaseOfID(string ID, List<PickupObject> allItems, float additionalMultiplier = 1)
+        public static void ProcessnewItemDatabaseOfID(ModdedItemTracker ID,  float additionalMultiplier = 1)
         {
-            /*
-            List<int> D = new List<int>();
-            List<int> C = new List<int>();
-            List<int> B = new List<int>();
-            List<int> A = new List<int>();
-            List<int> S = new List<int>();
-            */
-            List<int> Items = new List<int>();
-            foreach (string o in Gungeon.Game.Items.AllIDs)
-            {
-                if (o.Contains(ID)) 
-                {
-                    PickupObject p = Gungeon.Game.Items.Get(o);
-                    if (allItems.Contains(p))
-                    {
-                        Items.Add(p.PickupObjectId);
-                        /*
-                        switch (p.quality)
-                        {
-                            case PickupObject.ItemQuality.D:
-                                D.Add(p.PickupObjectId);
-                                break;
-                            case PickupObject.ItemQuality.C:
-                                C.Add(p.PickupObjectId);
-                                break;
-                            case PickupObject.ItemQuality.B:
-                                B.Add(p.PickupObjectId);
-                                break;
-                            case PickupObject.ItemQuality.A:
-                                A.Add(p.PickupObjectId);
-                                break;
-                            case PickupObject.ItemQuality.S:
-                                S.Add(p.PickupObjectId);
-                                break;
-                        }
-                        */
-                    }
-                }
-            }
+           //Debug.Log($"{ID.ItemIDs.Count} | {allitems.Count} | {(float)((float)ID.ItemIDs.Count / (float)allitems.Count)} {1-(float)((float)ID.ItemIDs.Count / (float)allitems.Count)}");
+            float mult = 1 - (float)((float)ID.ItemIDs.Count / (float)allitems.Count);
+            var entries = GameManager.Instance.RewardManager.ItemsLootTable.defaultItemDrops.elements.Where(self => ID.ItemIDs.Contains(self.pickupId)).ToList();
+            entries.AddRange(GameManager.Instance.RewardManager.GunsLootTable.defaultItemDrops.elements.Where(self => ID.ItemIDs.Contains(self.pickupId)).ToList());
 
-            float mult = 1 - (float)((float)Items.Count / (float)allItems.Count);
-            foreach (WeightedGameObject obj in GameManager.Instance.RewardManager.GunsLootTable.defaultItemDrops.elements)
+            foreach (var entry in entries)
             {
-                if (Items.Contains(obj.pickupId)) { obj.weight = (mult * additionalMultiplier); }   
+                entry.weight *= (mult * additionalMultiplier);
+                //Debug.Log(entry.weight);
             }
-            foreach (WeightedGameObject obj in GameManager.Instance.RewardManager.ItemsLootTable.defaultItemDrops.elements)
-            {
-                if (Items.Contains(obj.pickupId))
-                {
-                    obj.weight = (mult * additionalMultiplier); }
-                }
-            }
+        }
         
         
 
